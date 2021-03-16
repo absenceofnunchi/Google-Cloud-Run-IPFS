@@ -28,29 +28,35 @@ app.get('/info', (req, res) => {
 })
 
 app.post('/add', (req, res) => {
-
   var form = new multiparty.Form();
 
-  form.parse(req, function(err, fields, files) {
-    console.log("util inspect: ", util.inspect({ fields: fields, files: files }))
+  form.parse(req, async function(err, fields, files) {
     const data = fs.readFileSync(files.file[0].path)
-    ipfs.add(data, (error, result) => {
-      functions.logger.log("ipfs result", result);
-      console.log("result", result);
-      // Check If error
-      if (error) {
-          functions.logger.log("error", error);
-          console.log("error", error)
-          res.status(500).send({ "ipfs error": error})
-      }
-      fs.unlinkSync(tempFilePath);
-      res.status(200).send({ "ipfs success": result})
-    });
+    // const data = await fs.promises.readFile(files.file[0].path);
+    // console.log("data", data)
+    // ipfs.add(data, (error, result) => {
+    //   functions.logger.log("ipfs result", result);
+    //   console.log("result", result);
+    //   // Check If error
+    //   if (error) {
+    //       functions.logger.log("error", error);
+    //       console.log("error", error)
+    //       res.status(500).send({ "ipfs error": error})
+    //   }
 
-    res.status(200).send({ "message": "hello"})
-    // res.writeHead(200, { 'content-type': 'text/plain' });
-    // res.write('received upload:\n\n');
-    // res.end(util.inspect({ fields: fields, files: files }));
+    // });
+
+    try {
+      const added = await ipfs.add(data)
+      console.log("added", added)
+      res.status(200).send({ "ipfs success": added})
+    } catch (err) {
+      console.error(err)
+      res.status(500).send({ "ipfs error": error})
+    }
+    
+    fs.unlinkSync(data);
+    // res.status(200).send({ "message": "hello"})
   })
 })
 
@@ -58,43 +64,4 @@ app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`)
 })
 
-// if (req.url === '/add' && req.method === 'POST') {
-//   // parse a file upload
-//   var form = new multiparty.Form();
 
-//   form.parse(req, function(err, fields, files) {
-//     console.log(`fieldsssss: ${fields}`)
-//     console.log(`filesssss: ${files}`)
-//     res.writeHead(200, { 'content-type': 'text/plain' });
-//     res.write('received upload:\n\n');
-//     res.end(util.inspect({ fields: fields, files: files }));
-//   });
-
-//   return;
-// }
-
-// // show a file upload form
-// res.writeHead(200, { 'content-type': 'text/html' });
-// res.end(
-//   '<form action="/upload" enctype="multipart/form-data" method="post">'+
-//   '<input type="text" name="title"><br>'+
-//   '<input type="file" name="upload" multiple="multiple"><br>'+
-//   '<input type="submit" value="Upload">'+
-//   '</form>'
-// );
-
-
-
-// const files = {
-//   "file": [
-//     {
-//       "fieldName":"file",
-//       "originalFilename":"file",
-//       "path":"/tmp/RY5CbG8Kk9APyXTBbtlyGen4",
-//       "headers":{
-//         "content-disposition":"form-data; name=\"file\"; filename=\"file\"","content-type":"image/*"
-//       },
-//       "size":1544169
-//     }
-//   ]
-// }
