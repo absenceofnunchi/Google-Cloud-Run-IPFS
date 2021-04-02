@@ -27,24 +27,12 @@ app.get('/info', (req, res) => {
   res.send('This is info')
 })
 
-app.post('/add', (req, res) => {
+app.post('/addImage', (req, res) => {
   var form = new multiparty.Form();
 
   form.parse(req, async function(err, fields, files) {
     const data = fs.readFileSync(files.file[0].path)
-    // const data = await fs.promises.readFile(files.file[0].path);
-    // console.log("data", data)
-    // ipfs.add(data, (error, result) => {
-    //   functions.logger.log("ipfs result", result);
-    //   console.log("result", result);
-    //   // Check If error
-    //   if (error) {
-    //       functions.logger.log("error", error);
-    //       console.log("error", error)
-    //       res.status(500).send({ "ipfs error": error})
-    //   }
-
-    // });
+    console.log("data", data)
 
     try {
       const added = await ipfs.add(data)
@@ -56,7 +44,26 @@ app.post('/add', (req, res) => {
     }
     
     fs.unlinkSync(data);
-    // res.status(200).send({ "message": "hello"})
+  })
+})
+
+app.post('/addFile', (req, res) => {
+  var form = new multiparty.Form();
+
+  form.parse(req, async function(err, fields, files) {
+    const data = fs.readFileSync(Buffer.from(files.file[0].path))
+    console.log("data", data)
+
+    try {
+      const added = await ipfs.add(data)
+      console.log("added", added)
+      res.status(200).send({ "ipfs success": added})
+    } catch (err) {
+      console.error(err)
+      res.status(500).send({ "ipfs error": error})
+    }
+    
+    fs.unlinkSync(data);
   })
 })
 
